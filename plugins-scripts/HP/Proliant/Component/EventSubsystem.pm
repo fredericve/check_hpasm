@@ -18,6 +18,11 @@ sub new {
     info => undef,
     extendedinfo => undef,
     boottime => 0,
+    base_oids => {
+        cpqHeEventLog           =>     "1.3.6.1.4.1.232.6.2.11",
+        cpqHeEventLogSupported  => "1.3.6.1.4.1.232.6.2.11.1.0",
+        cpqHeEventLogCondition  => "1.3.6.1.4.1.232.6.2.11.2.0",
+    },
   };
   bless $self, $class;
   if ($self->{method} eq 'snmp') {

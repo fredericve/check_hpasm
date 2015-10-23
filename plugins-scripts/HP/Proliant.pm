@@ -9,43 +9,54 @@ our @ISA = qw(HP::Server);
 sub init {
   my $self = shift;
   $self->{components} = {
-      powersupply_subsystem => undef,
-      fan_subsystem => undef,
-      temperature_subsystem => undef,
-      cpu_subsystem => undef,
-      memory_subsystem => undef,
-      nic_subsystem => undef,
-      disk_subsystem => undef,
-      asr_subsystem => undef,
-      event_subsystem => undef,
+      powersupply_subsystem     => HP::Proliant::Component::PowersupplySubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
+      fan_subsystem             => HP::Proliant::Component::FanSubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
+      temperature_subsystem     => HP::Proliant::Component::TemperatureSubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
+      cpu_subsystem             => HP::Proliant::Component::CpuSubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
+      memory_subsystem          => HP::Proliant::Component::MemorySubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
+      nic_subsystem             => HP::Proliant::Component::NicSubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
+      disk_subsystem            => HP::Proliant::Component::DiskSubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
+      asr_subsystem             => HP::Proliant::Component::AsrSubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
+      event_subsystem           => HP::Proliant::Component::EventSubsystem->new(
+        method      => $self->{method},
+        runtime     => $self->{runtime}),
   };
   $self->{serial} = 'unknown';
   $self->{product} = 'unknown';
   $self->{romversion} = 'unknown';
-  $self->collect();
+  my $rawdata = $self->collect();
   if (! $self->{runtime}->{plugin}->check_messages() && 
       ! exists $self->{noinst_hint}) {
     $self->set_serial();
     $self->check_for_buggy_firmware();
     $self->analyze_cpus();
-    $self->analyze_powersupplies();
-    $self->analyze_fan_subsystem();
-    $self->analyze_temperatures();
-    $self->analyze_memory_subsystem();
-    $self->analyze_nic_subsystem();
-    $self->analyze_disk_subsystem();
-    $self->analyze_asr_subsystem();
-    $self->analyze_event_subsystem();
+    foreach my $component (keys(%{$self->{components}})) {
+      if (! $component->skipped()){
+        $component->analyze_subsystem($rawdata);
+      }
+    }
     $self->auto_blacklist();
-    $self->check_cpus();
-    $self->check_powersupplies();
-    $self->check_fan_subsystem();
-    $self->check_temperatures();
-    $self->check_memory_subsystem();
-    $self->check_nic_subsystem();
-    $self->check_disk_subsystem();
-    $self->check_asr_subsystem();
-    $self->check_event_subsystem();
+    foreach my $component (keys(%{$self->{components}})) {
+      if (! $component->skipped()){
+        $component->check_subsystem();
+      }
+    }
   }
 }
 
@@ -83,166 +94,6 @@ sub dump {
   printf STDERR "product %s\n", $self->{product};
   printf STDERR "romversion %s\n", $self->{romversion};
   printf STDERR "%s\n", Data::Dumper::Dumper($self->{components});
-}
-
-sub analyze_powersupplies {
-  my $self = shift;
-  $self->{components}->{powersupply_subsystem} =
-      HP::Proliant::Component::PowersupplySubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub analyze_fan_subsystem {
-  my $self = shift;
-  $self->{components}->{fan_subsystem} = 
-      HP::Proliant::Component::FanSubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub analyze_temperatures {
-  my $self = shift;
-  $self->{components}->{temperature_subsystem} = 
-      HP::Proliant::Component::TemperatureSubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub analyze_cpus {
-  my $self = shift;
-  $self->{components}->{cpu_subsystem} =
-      HP::Proliant::Component::CpuSubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub analyze_memory_subsystem {
-  my $self = shift;
-  $self->{components}->{memory_subsystem} = 
-      HP::Proliant::Component::MemorySubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub analyze_nic_subsystem {
-  my $self = shift;
-  return if $self->{method} ne "snmp";
-  $self->{components}->{nic_subsystem} = 
-      HP::Proliant::Component::NicSubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub analyze_disk_subsystem {
-  my $self = shift;
-  $self->{components}->{disk_subsystem} =
-      HP::Proliant::Component::DiskSubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub analyze_asr_subsystem {
-  my $self = shift;
-  $self->{components}->{asr_subsystem} =
-      HP::Proliant::Component::AsrSubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub analyze_event_subsystem {
-  my $self = shift;
-  $self->{components}->{event_subsystem} =
-      HP::Proliant::Component::EventSubsystem->new(
-    rawdata => $self->{rawdata},
-    method => $self->{method},
-    runtime => $self->{runtime},
-  );
-}
-
-sub check_cpus {
-  my $self = shift;
-  $self->{components}->{cpu_subsystem}->check();
-  $self->{components}->{cpu_subsystem}->dump()
-      if $self->{runtime}->{options}->{verbose} >= 2;
-}
-
-sub check_powersupplies {
-  my $self = shift;
-  $self->{components}->{powersupply_subsystem}->check();
-  $self->{components}->{powersupply_subsystem}->dump()
-      if $self->{runtime}->{options}->{verbose} >= 2;
-}
-
-sub check_fan_subsystem {
-  my $self = shift;
-  $self->{components}->{fan_subsystem}->check();
-  $self->{components}->{fan_subsystem}->dump()
-      if $self->{runtime}->{options}->{verbose} >= 2;
-}
-
-sub check_temperatures {
-  my $self = shift;
-  $self->{components}->{temperature_subsystem}->check();
-  $self->{components}->{temperature_subsystem}->dump()
-      if $self->{runtime}->{options}->{verbose} >= 2;
-}
-
-sub check_memory_subsystem {
-  my $self = shift;
-  $self->{components}->{memory_subsystem}->check();
-  $self->{components}->{memory_subsystem}->dump()
-      if $self->{runtime}->{options}->{verbose} >= 2;
-}
-
-sub check_nic_subsystem {
-  my $self = shift;
-  return if $self->{method} ne "snmp";
-  if ($self->{runtime}->{plugin}->{opts}->get('eval-nics')) {
-    $self->{components}->{nic_subsystem}->check();
-    $self->{components}->{nic_subsystem}->dump()
-        if $self->{runtime}->{options}->{verbose} >= 2;
-  }
-}
-sub check_disk_subsystem {
-  my $self = shift;
-  $self->{components}->{disk_subsystem}->check();
-  $self->{components}->{disk_subsystem}->dump()
-      if $self->{runtime}->{options}->{verbose} >= 2;
-  # zum anhaengen an die normale ausgabe... da: 2 logical drives, 5 physical...
-  $self->{runtime}->{plugin}->add_message(OK,
-      $self->{components}->{disk_subsystem}->{summary})
-      if $self->{components}->{disk_subsystem}->{summary};
-}
-
-sub check_asr_subsystem {
-  my $self = shift;
-  $self->{components}->{asr_subsystem}->check();
-  $self->{components}->{asr_subsystem}->dump()
-      if $self->{runtime}->{options}->{verbose} >= 2;
-}
-
-sub check_event_subsystem {
-  my $self = shift;
-  $self->{components}->{event_subsystem}->check();
-  $self->{components}->{event_subsystem}->dump()
-      if $self->{runtime}->{options}->{verbose} >= 2;
 }
 
 sub auto_blacklist() {
@@ -547,33 +398,23 @@ sub collect {
   my $self = shift;
   my %oidtables = (
       system =>            "1.3.6.1.2.1.1",
-      cpqSeProcessor =>    "1.3.6.1.4.1.232.1.2.2",
-      cpqHePWSComponent => "1.3.6.1.4.1.232.6.2.9",
-      cpqHeThermal =>      "1.3.6.1.4.1.232.6.2.6",
-      cpqHeMComponent =>   "1.3.6.1.4.1.232.6.2.14",
-      cpqDaComponent =>    "1.3.6.1.4.1.232.3.2",
-      cpqSiComponent =>    "1.3.6.1.4.1.232.2.2",
       cpqSeRom =>          "1.3.6.1.4.1.232.1.2.6",
-      cpqSasComponent =>   "1.3.6.1.4.1.232.5",
-      cpqIdeComponent =>   "1.3.6.1.4.1.232.14",
-      cpqFcaComponent =>   "1.3.6.1.4.1.232.16.2",
-      cpqHeAsr =>          "1.3.6.1.4.1.232.6.2.5",
-      cpqNic =>            "1.3.6.1.4.1.232.18.2",
-      cpqHeEventLog =>     "1.3.6.1.4.1.232.6.2.11",
-
+  );
+  my %componentoids = (
       #    cpqHeComponent =>  "1.3.6.1.4.1.232.6.2",
       #    cpqHeFComponent => "1.3.6.1.4.1.232.6.2.6.7",
       #    cpqHeTComponent => "1.3.6.1.4.1.232.6.2.6.8",
   );
+
+  foreach my $component (keys(%{$self->{components}}) {
+      if (! $component->skipped()) {
+          foreach my $base_oid (keys(%{$component->{base_oids}}) {
+              $oidtables{$base_oid} = $component->{base_oids}->{$base_oid};
+          }
+      }
+  }
+
   my %oidvalues = (
-      cpqHeEventLogSupported => "1.3.6.1.4.1.232.6.2.11.1.0",
-      cpqHeEventLogCondition => "1.3.6.1.4.1.232.6.2.11.2.0",
-      cpqNicIfLogMapOverallCondition => "1.3.6.1.4.1.232.18.2.2.2.0",
-      cpqHeThermalTempStatus => "1.3.6.1.4.1.232.6.2.6.3.0",
-      cpqHeThermalSystemFanStatus => "1.3.6.1.4.1.232.6.2.6.4.0",
-      cpqHeThermalCpuFanStatus => "1.3.6.1.4.1.232.6.2.6.5.0",
-      cpqHeAsrStatus => "1.3.6.1.4.1.232.6.2.5.1.0",
-      cpqHeAsrCondition => "1.3.6.1.4.1.232.6.2.5.17.0",
   );
   if ($self->{runtime}->{plugin}->opts->snmpwalk) {
     my $cpqSeMibCondition = '1.3.6.1.4.1.232.1.1.3.0'; # 2=ok
@@ -680,7 +521,8 @@ sub collect {
       $self->{rawdata} = $response;
     }
   }
-  return $self->{runtime}->{plugin}->check_messages();
+  return $self->{rawdata};
+  #return $self->{runtime}->{plugin}->check_messages();
 }
 
 sub set_serial {

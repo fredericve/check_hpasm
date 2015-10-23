@@ -40,6 +40,12 @@ $plugin->add_arg(
     required => 0,
 );
 $plugin->add_arg(
+    spec => 'skip|s=s',
+    help => '--skip=cpqHeMComponent,cpqHeEventLog
+   Skip components you do not wish to monitor',
+    required => 0,
+);
+$plugin->add_arg(
     spec => 'ignore-fan-redundancy',
     help => '--ignore-fan-redundancy
    Ignore missing redundancy partners',

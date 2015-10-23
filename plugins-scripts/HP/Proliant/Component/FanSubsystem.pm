@@ -18,6 +18,10 @@ sub new {
     blacklisted => 0,
     info => undef,
     extendedinfo => undef,
+    base_oids => {
+        cpqHeThermalSystemFanStatus => "1.3.6.1.4.1.232.6.2.6.4.0",
+        cpqHeThermalCpuFanStatus    => "1.3.6.1.4.1.232.6.2.6.5.0",
+    },
   };
   bless $self, $class;
   if ($self->{method} eq 'snmp') {

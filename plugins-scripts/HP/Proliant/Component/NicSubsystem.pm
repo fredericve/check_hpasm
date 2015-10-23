@@ -18,6 +18,10 @@ sub new {
     blacklisted => 0,
     info => undef,
     extendedinfo => undef,
+    base_oids => {
+        cpqNic                          => "1.3.6.1.4.1.232.18.2",
+        cpqNicIfLogMapOverallCondition  => "1.3.6.1.4.1.232.18.2.2.2.0",
+    },
   };
   bless $self, $class;
   if ($self->{method} eq 'snmp') {
@@ -28,6 +32,14 @@ sub new {
     die "unknown method";
   }
   return $self;
+}
+
+sub check_subsystem {
+    my $self = shift;
+    return if $self->{method} ne "snmp";
+    if ($self->{runtime}->{plugin}->{opts}->get('eval-nics')) {
+        $self->SUPER::check_subsystem();
+    }
 }
 
 sub check {

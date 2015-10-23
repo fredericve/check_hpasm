@@ -18,9 +18,15 @@ sub new {
     scsi_da_subsystem => undef,
     condition => $params{condition},
     blacklisted => 0,
+    base_oids => {
+        cpqDaComponent  =>   "1.3.6.1.4.1.232.3.2",
+        cpqSasComponent =>   "1.3.6.1.4.1.232.5",
+        cpqIdeComponent =>   "1.3.6.1.4.1.232.14",
+        cpqFcaComponent =>   "1.3.6.1.4.1.232.16.2",
+        cpqSiComponent  =>   "1.3.6.1.4.1.232.2.2",
+    },
   };
   bless $self, $class;
-  $self->init();
   return $self;
 }
 
@@ -51,6 +57,14 @@ sub init {
     rawdata => $self->{rawdata},
     method => $self->{method},
   );
+}
+
+sub check_subsystem {
+    my $self = shift;
+    $self->SUPER::check_subsystem();
+    $self->{runtime}->{plugin}->add_message(OK,
+        $self->{summary})
+        if $self->{summary};
 }
 
 sub check {

@@ -18,6 +18,9 @@ sub new {
     blacklisted => 0,
     info => undef,
     extendedinfo => undef,
+    base_oids => {
+        cpqHePWSComponent => "1.3.6.1.4.1.232.6.2.9",
+    },
   };
   bless $self, $class;
   if ($self->{method} eq 'snmp') {

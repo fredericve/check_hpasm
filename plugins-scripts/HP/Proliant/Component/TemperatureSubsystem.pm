@@ -18,6 +18,10 @@ sub new {
     blacklisted => 0,
     info => undef,
     extendedinfo => undef,
+    base_oids => {
+        cpqHeThermal            => "1.3.6.1.4.1.232.6.2.6",
+        cpqHeThermalTempStatus  => "1.3.6.1.4.1.232.6.2.6.3.0",
+    },
   };
   bless $self, $class;
   if ($params{runtime}->{options}->{customthresholds}) {

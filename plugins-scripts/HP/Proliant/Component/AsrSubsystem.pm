@@ -17,12 +17,16 @@ sub new {
     blacklisted => 0,
     info => undef,
     extendedinfo => undef,
+    base_oids => {
+        cpqHeAsr            => "1.3.6.1.4.1.232.6.2.5",
+        cpqHeAsrStatus      => "1.3.6.1.4.1.232.6.2.5.1.0",
+        cpqHeAsrCondition   => "1.3.6.1.4.1.232.6.2.5.17.0",
+    },
   };
-  bless $self, $class;
   if ($self->{method} eq 'snmp') {
-    return HP::Proliant::Component::AsrSubsystem::SNMP->new(%params);
+    bless $self, "HP::Proliant::Component::AsrSubsystem::SNMP";
   } elsif ($self->{method} eq 'cli') {
-    return HP::Proliant::Component::AsrSubsystem::CLI->new(%params);
+    bless $self, "HP::Proliant::Component::AsrSubsystem::CLI";
   } else {
     die "unknown method";
   }
@@ -39,7 +43,6 @@ sub check {
 sub dump {
   my $self = shift;
 }
-
 
 1;
 

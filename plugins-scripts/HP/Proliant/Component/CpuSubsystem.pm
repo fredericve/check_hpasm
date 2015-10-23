@@ -18,12 +18,14 @@ sub new {
     blacklisted => 0,
     info => undef,
     extendedinfo => undef,
+    base_oids => {
+        cpqSeProcessor => "1.3.6.1.4.1.232.1.2.2",
+    }
   };
-  bless $self, $class;
   if ($self->{method} eq 'snmp') {
-    return HP::Proliant::Component::CpuSubsystem::SNMP->new(%params);
+    bless $self, "HP::Proliant::Component::CpuSubsystem::SNMP";
   } elsif ($self->{method} eq 'cli') {
-    return HP::Proliant::Component::CpuSubsystem::CLI->new(%params);
+      bless $self, "HP::Proliant::Component::CpuSubsystem::CLI";
   } else {
     die "unknown method";
   }

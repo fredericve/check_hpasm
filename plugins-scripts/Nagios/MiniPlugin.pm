@@ -97,6 +97,7 @@ sub add_perfdata {
 sub check_messages {
   my $self = shift;
   my %args = @_;
+  print STDERR "check_messsages: \n";
 
   # Add object messages to any passed in as args
   for my $code (qw(critical warning unknown ok)) {

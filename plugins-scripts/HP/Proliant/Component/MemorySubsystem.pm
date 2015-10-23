@@ -17,6 +17,9 @@ sub new {
     info => undef,
     extendedinfo => undef,
     dimms => [],
+    base_oids => {
+        cpqHeMComponent =>   "1.3.6.1.4.1.232.6.2.14",
+    };
   };
   bless $self, $class;
   if ($self->{method} eq 'snmp') {
